@@ -232,6 +232,21 @@ public class KotlinJavaPsiFacade {
     public PsiPackage findPackage(@NotNull String qualifiedName, GlobalSearchScope searchScope) {
         ProgressIndicatorAndCompilationCanceledStatus.checkCanceled();
 
+        if (searchScope instanceof TopPackageAwareSearchScope) {
+            TopPackageAwareSearchScope topPackageAwareSearchScope = (TopPackageAwareSearchScope) searchScope;
+            Set<String> topPackageNames = topPackageAwareSearchScope.getTopPackageNames();
+            if (topPackageNames != null) {
+                String topPackageName = qualifiedName;
+                int index = topPackageName.indexOf('.');
+                if (index > 0) {
+                    topPackageName = topPackageName.substring(0, index);
+                }
+                if (!topPackageNames.contains(topPackageName)) {
+                    return null;
+                }
+            }
+        }
+
         PackageCache cache = SoftReference.dereference(packageCache);
         if (cache == null) {
             packageCache = new SoftReference<>(cache = new PackageCache());
